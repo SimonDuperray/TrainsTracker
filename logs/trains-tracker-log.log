@@ -1,0 +1,17 @@
+{
+  "inoui": 40,
+  "total": 789,
+  "intercites": 14,
+  "ter": 519,
+  "lyria": 3,
+  "transilien": 208,
+  "ouigo": 3,
+  "tgv": 2,
+  "ret": 34,
+  "sup": 40,
+  "avgSteps": 13,
+  "avgSpeed": 71,
+  "minSpeed": 1,
+  "maxSpeed": 278
+}
+> process finished
