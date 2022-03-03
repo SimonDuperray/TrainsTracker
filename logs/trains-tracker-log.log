@@ -1,17 +1,17 @@
 {
-  "intercites": 14,
-  "total": 843,
-  "ter": 552,
-  "inoui": 41,
-  "transilien": 228,
-  "tgv": 3,
+  "intercites": 13,
+  "total": 975,
+  "inoui": 47,
+  "ter": 673,
+  "transilien": 230,
+  "ouigo": 5,
+  "tgv": 5,
   "lyria": 2,
-  "ouigo": 3,
-  "ret": 35,
-  "sup": 42,
-  "avgSteps": 13,
-  "avgSpeed": 70,
-  "minSpeed": 1,
-  "maxSpeed": 278
+  "ret": 37,
+  "sup": 56,
+  "avgSteps": 12,
+  "avgSpeed": 72,
+  "minSpeed": 21,
+  "maxSpeed": 284
 }
 > process finished

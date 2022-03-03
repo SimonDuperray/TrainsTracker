@@ -28,7 +28,7 @@ minSpeed, maxSpeed, avgSpeed, avgSteps = 0, 0, 0, 0
 for train in trains:
     nbSteps.append(len(train['properties']['etapes']))
     speed = train['properties']['vitesse']
-    if speed<350:
+    if speed<350 and speed>20:
         speeds.append(speed)
 
 avgSpeed = int(sum(speeds)/len(speeds))
