@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/home/pi/Documents/TrainsTracker/main_parse.py", line 7, in <module>
+    trains.parse()
+  File "/home/pi/Documents/TrainsTracker/TrainsScraper.py", line 109, in parse
+    to_store['speedOuigo']=self.get_average(speedsPerCat['ouigo'])
+KeyError: 'ouigo'
