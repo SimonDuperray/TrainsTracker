@@ -1,4 +1,4 @@
-import datetime, psutil, requests, json, os, seaborn as sns, pandas as pd, matplotlib.pyplot as plt
+import datetime, requests, json, os, matplotlib.pyplot as plt, time
 from influxdb import InfluxDBClient
 from dotenv import load_dotenv
 
@@ -166,10 +166,13 @@ class TrainsScraper:
       plt.title(title)
       plt.xlabel(xlabel)
       plt.ylabel(ylabel)
+      plt.xticks(range(0, len(x), 10), rotation=45)
+      plt.grid()
       plt.legend(loc="upper left")
       if yScaleLog:
          plt.yscale('log')
       plt.savefig(f'{filepath}/{title}.png')
+      plt.savefig(f'/var/www/html/figures/{title}.png')
       plt.clf()
 
    def get_from_influx(self):
@@ -180,7 +183,7 @@ class TrainsScraper:
       dates = trains['time']
       dates_formatted = []
       for date in dates:
-         dates_formatted.append(date[11:19])
+         dates_formatted.append(date[11:16])
 
       # NUMBER OF STEPS
       avg_steps = trains['avgSteps']
@@ -189,7 +192,7 @@ class TrainsScraper:
          xlabel="hour",
          y=[avg_steps],
          ylabel="Number of steps per journey",
-         color=["blue"],
+         color=["#d93b3b"],
          label=['nb_steps'],
          type=None,
          filepath="/home/pi/Documents/TrainsTracker/figures",
@@ -210,12 +213,12 @@ class TrainsScraper:
          xlabel="hour",
          y=[speed_intercites, speed_transilien, speed_ter, speed_inoui, speed_tgv, speed_lyria, speed_ouigo],
          ylabel="Velocity (km/h)",
-         color=["blue", "red", "green", "black", "yellow", "cyan", "purple"],
+         color=["#a56774", "#027333", "#6e3e27", "#d99923", "#d93b3b", "#1E90FF", "purple"],
          label=['intercites', 'transilien', 'ter', 'inoui', 'tgv', 'lyria', 'ouigo'],
          type=None,
          filepath="/home/pi/Documents/TrainsTracker/figures",
          title="speeds_per_categories",
-         yScaleLog=False
+         yScaleLog=True
       )
 
       # SPEEDS
@@ -227,7 +230,7 @@ class TrainsScraper:
          xlabel="hour",
          y=[avg_speeds, min_speed, max_speed],
          ylabel="Velocity (km/h)",
-         color=["blue", "red", "green"],
+         color=["#a56774", "#027333", "#6e3e27"],
          label=['average', 'min', 'max'],
          type=None,
          filepath="/home/pi/Documents/TrainsTracker/figures",
@@ -244,7 +247,7 @@ class TrainsScraper:
          xlabel="hour",
          y=[total, delayed, deleted],
          ylabel="Number of trains",
-         color=["blue", "red", "green"],
+         color=["#a56774", "#027333", "#6e3e27"],
          label=['total', 'delayed', 'deleted'],
          type=None,
          filepath="/home/pi/Documents/TrainsTracker/figures",
@@ -265,7 +268,7 @@ class TrainsScraper:
          xlabel="hour",
          y=[tgv, intercites, inoui, ter, ouigo, transilien, lyria],
          ylabel="Velocity (km/h)",
-         color=["blue", "red", "green", "black", "yellow", "cyan", "purple"],
+         color=["#a56774", "#027333", "#6e3e27", "#d99923", "#d93b3b", "#1E90FF", "purple"],
          label=['tgv', 'intercites', 'inoui', 'ter', 'ouigo', 'transilien', 'lyria'],
          type=None,
          filepath="/home/pi/Documents/TrainsTracker/figures",
@@ -274,4 +277,272 @@ class TrainsScraper:
       )
 
       # save pdf file and clean json file
-      # self.init_json()
+      now = datetime.datetime.now()
+      date__ = now.strftime("%d/%m/%Y %H:%M:%S")
+      document_body = f'''
+         <!DOCTYPE html>
+         <html lang="en">
+         <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>TrainsReport</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+         </head>
+         <body style="background-color: #102A43!important; color: #fff!important;">
+            <nav style="background-color: #627D98!important;" class="navbar navbar-dark bg-primary">
+               <a style="padding-left: 10px!important" class="navbar-brand" href="#">TrainsTracker</a>
+               <span style="padding-right: 10px!important" class="navbar-text">
+                  { date__ }
+               </span>
+            </nav>
+            <div class="container">
+
+               <h2 style="padding: 15px 0;" class="display-5">Evolution of number of steps per journey</h2>
+               <div style="margin: 15px 0;" class="row">
+                  <div class="col-md-6">
+                     <img src="../figures/avg_steps.png" alt="avg_steps">
+                  </div>
+                  <div class="col-md-6">
+                     <table class="table table-light">
+                        <thead>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="col">Minimum</th>
+                           <th style="color:#102A43!important;" scope="col">Average</th>
+                           <th style="color:#102A43!important;" scope="col">Maximum</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                           <td style="color:#102A43!important;">{ min(avg_steps) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(avg_steps) }</td>
+                           <td style="color:#102A43!important;">{ max(avg_steps) }</td>
+                        </tr>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+               <hr>
+               <h2 style="padding: 15px 0;" class="display-5">Extremal speeds</h2>
+               <div style="margin: 15px 0;" class="row">
+                  <div class="col-md-6">
+                     <img src="../figures/extremal_speeds.png" alt="extremal_speeds">
+                  </div>
+                  <div class="col-md-6">
+                     <table class="table table-light">
+                        <thead>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="col">Label</th>
+                           <th style="color:#102A43!important;" scope="col">Minimum</th>
+                           <th style="color:#102A43!important;" scope="col">Average</th>
+                           <th style="color:#102A43!important;" scope="col">Maximum</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Min</th>
+                           <td style="color:#102A43!important;">{ min(min_speed) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(min_speed) }</td>
+                           <td style="color:#102A43!important;">{ max(min_speed)}</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Avg.</th>
+                           <td style="color:#102A43!important;">{ min(avg_speeds) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(avg_speeds) }</td>
+                           <td style="color:#102A43!important;">{ max(avg_speeds)}</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Max</th>
+                           <td style="color:#102A43!important;">{ min(max_speed) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(max_speed) }</td>
+                           <td style="color:#102A43!important;">{ max(max_speed)}</td>
+                        </tr>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+               <hr>
+               <h2 style="padding: 15px 0;" class="display-5">General informations</h2>
+               <div style="margin: 15px 0;" class="row">
+                  <div class="col-md-6">
+                     <img src="../figures/general.png" alt="general">
+                  </div>
+                  <div class="col-md-6">
+                     <table class="table table-light">
+                        <thead>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="col">Label</th>
+                           <th style="color:#102A43!important;" scope="col">Total</th>
+                           <th style="color:#102A43!important;" scope="col">Delayed</th>
+                           <th style="color:#102A43!important;" scope="col">Deleted</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Min</th>
+                           <td style="color:#102A43!important;">{ min(total) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(total) }</td>
+                           <td style="color:#102A43!important;">{ max(total) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Avg.</th>
+                           <td style="color:#102A43!important;">{ min(delayed) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(delayed) }</td>
+                           <td style="color:#102A43!important;">{ max(delayed) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Max</th>
+                           <td style="color:#102A43!important;">{ min(deleted) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(deleted) }</td>
+                           <td style="color:#102A43!important;">{ max(deleted) }</td>
+                        </tr>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+               <hr>
+               <h2 style="padding: 15px 0;" class="display-5">Speeds per category</h2>
+               <div style="margin: 15px 0;" class="row">
+                  <div class="col-md-6">
+                     <img src="../figures/speeds_per_categories.png" alt="speeds_per_categories">
+                  </div>
+                  <div class="col-md-6">
+                     <table class="table table-light">
+                        <thead>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="col">Label</th>
+                           <th style="color:#102A43!important;" scope="col">Minimum</th>
+                           <th style="color:#102A43!important;" scope="col">Average</th>
+                           <th style="color:#102A43!important;" scope="col">Maximum</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Intercite</th>
+                           <td style="color:#102A43!important;">{ min(speed_intercites) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_intercites) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_intercites) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Transilien</th>
+                           <td style="color:#102A43!important;">{ min(speed_transilien) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_transilien) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_transilien) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Ter</th>
+                           <td style="color:#102A43!important;">{ min(speed_ter) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_ter) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_ter) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Inoui</th>
+                           <td style="color:#102A43!important;">{ min(speed_inoui) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_inoui) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_inoui) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Tgv</th>
+                           <td style="color:#102A43!important;">{ min(speed_tgv) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_tgv) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_tgv) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Lyria</th>
+                           <td style="color:#102A43!important;">{ min(speed_lyria) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_lyria) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_lyria) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Ouigo</th>
+                           <td style="color:#102A43!important;">{ min(speed_ouigo) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(speed_ouigo) }</td>
+                           <td style="color:#102A43!important;">{ max(speed_ouigo) }</td>
+                        </tr>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+               <hr>
+               <h2 style="padding: 15px 0;" class="display-5">Trains categories repartition</h2>
+               <div style="margin: 15px 0;" class="row">
+                  <div class="col-md-6">
+                     <img src="../figures/trains_categories_repartition.png" alt="trains_categories_repartition">
+                  </div>
+                  <div class="col-md-6">
+                     <table class="table table-light">
+                        <thead>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="col">Label</th>
+                           <th style="color:#102A43!important;" scope="col">Minimum</th>
+                           <th style="color:#102A43!important;" scope="col">Average</th>
+                           <th style="color:#102A43!important;" scope="col">Maximum</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Intercite</th>
+                           <td style="color:#102A43!important;">{ min(intercites) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(intercites) }</td>
+                           <td style="color:#102A43!important;">{ max(intercites) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Transilien</th>
+                           <td style="color:#102A43!important;">{ min(transilien) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(transilien) }</td>
+                           <td style="color:#102A43!important;">{ max(transilien) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Ter</th>
+                           <td style="color:#102A43!important;">{ min(ter) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(ter) }</td>
+                           <td style="color:#102A43!important;">{ max(ter) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Inoui</th>
+                           <td style="color:#102A43!important;">{ min(inoui) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(inoui) }</td>
+                           <td style="color:#102A43!important;">{ max(inoui) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Tgv</th>
+                           <td style="color:#102A43!important;">{ min(tgv) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(tgv) }</td>
+                           <td style="color:#102A43!important;">{ max(tgv) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Lyria</th>
+                           <td style="color:#102A43!important;">{ min(lyria) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(lyria) }</td>
+                           <td style="color:#102A43!important;">{ max(lyria) }</td>
+                        </tr>
+                        <tr>
+                           <th style="color:#102A43!important;" scope="row">Ouigo</th>
+                           <td style="color:#102A43!important;">{ min(ouigo) }</td>
+                           <td style="color:#102A43!important;">{ self.get_average(ouigo) }</td>
+                           <td style="color:#102A43!important;">{ max(ouigo) }</td>
+                        </tr>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+            </div>
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+         </body>
+         </html>
+'''
+
+      timestamp = time.time()
+      document_title = "/var/www/html/trains/"+str(timestamp)+".html"
+      pdf = open(document_title, 'w')
+      pdf.write(document_body)
+      pdf.close()
+
+      # clear data
+      self.init_json()
