@@ -158,12 +158,19 @@ class TrainsScraper:
 
       print("> Process is finished!")
       
-   def plot_points(self, x, xlabel, y, ylabel, color, type, filepath, title):
-      plt.plot(x, y, color=color)
+   def plot_points(self, x, xlabel, y, ylabel, color, label, type, filepath, title, yScaleLog):
+      print(f"=== {title} ===")
+      for i in range(len(y)):
+         print(f"{i}: item: {y[i]} -- color: {color[i]}")
+         plt.plot(x, y[i], color=color[i], label=label[i])
       plt.title(title)
       plt.xlabel(xlabel)
       plt.ylabel(ylabel)
+      plt.legend(loc="upper left")
+      if yScaleLog:
+         plt.yscale('log')
       plt.savefig(f'{filepath}/{title}.png')
+      plt.clf()
 
    def get_from_influx(self):
       with open('/var/www/html/jsons/trains-data.json', 'r') as json_file:
@@ -180,12 +187,14 @@ class TrainsScraper:
       self.plot_points(
          x=dates_formatted,
          xlabel="hour",
-         y=avg_steps,
+         y=[avg_steps],
          ylabel="Number of steps per journey",
-         color="blue",
+         color=["blue"],
+         label=['nb_steps'],
          type=None,
          filepath="/home/pi/Documents/TrainsTracker/figures",
-         title="avg_steps"
+         title="avg_steps",
+         yScaleLog=False
       )
 
       # SPEEDS PER CATEGORY
@@ -196,17 +205,52 @@ class TrainsScraper:
       speed_tgv = trains['speedTgv']
       speed_lyria = trains['speedLyria']
       speed_ouigo = trains['speedOuigo']
-
+      self.plot_points(
+         x=dates_formatted,
+         xlabel="hour",
+         y=[speed_intercites, speed_transilien, speed_ter, speed_inoui, speed_tgv, speed_lyria, speed_ouigo],
+         ylabel="Velocity (km/h)",
+         color=["blue", "red", "green", "black", "yellow", "cyan", "purple"],
+         label=['intercites', 'transilien', 'ter', 'inoui', 'tgv', 'lyria', 'ouigo'],
+         type=None,
+         filepath="/home/pi/Documents/TrainsTracker/figures",
+         title="speeds_per_categories",
+         yScaleLog=False
+      )
 
       # SPEEDS
       avg_speeds = trains['avgSpeed']
       min_speed = trains['minSpeed']
       max_speed = trains['maxSpeed']
+      self.plot_points(
+         x=dates_formatted,
+         xlabel="hour",
+         y=[avg_speeds, min_speed, max_speed],
+         ylabel="Velocity (km/h)",
+         color=["blue", "red", "green"],
+         label=['average', 'min', 'max'],
+         type=None,
+         filepath="/home/pi/Documents/TrainsTracker/figures",
+         title="extremal_speeds",
+         yScaleLog=False
+      )
 
       # DELAYED AND DELETED
       total = trains['total']
       delayed = trains['ret']
       deleted = trains['sup']
+      self.plot_points(
+         x=dates_formatted,
+         xlabel="hour",
+         y=[total, delayed, deleted],
+         ylabel="Number of trains",
+         color=["blue", "red", "green"],
+         label=['total', 'delayed', 'deleted'],
+         type=None,
+         filepath="/home/pi/Documents/TrainsTracker/figures",
+         title="general",
+         yScaleLog=True
+      )
 
       # TRAINS CATEGORIES REPARTITION
       tgv = trains['tgv']
@@ -216,6 +260,18 @@ class TrainsScraper:
       ouigo = trains['ouigo']
       transilien = trains['transilien']
       lyria = trains['lyria']
+      self.plot_points(
+         x=dates_formatted,
+         xlabel="hour",
+         y=[tgv, intercites, inoui, ter, ouigo, transilien, lyria],
+         ylabel="Velocity (km/h)",
+         color=["blue", "red", "green", "black", "yellow", "cyan", "purple"],
+         label=['tgv', 'intercites', 'inoui', 'ter', 'ouigo', 'transilien', 'lyria'],
+         type=None,
+         filepath="/home/pi/Documents/TrainsTracker/figures",
+         title="trains_categories_repartition",
+         yScaleLog=True
+      )
 
       # save pdf file and clean json file
       # self.init_json()

@@ -1,6 +1,24 @@
-Traceback (most recent call last):
-  File "/home/pi/Documents/TrainsTracker/main_parse.py", line 7, in <module>
-    trains.parse()
-  File "/home/pi/Documents/TrainsTracker/TrainsScraper.py", line 109, in parse
-    to_store['speedOuigo']=self.get_average(speedsPerCat['ouigo'])
-KeyError: 'ouigo'
+{
+  "inoui": 34,
+  "total": 514,
+  "tgv": 3,
+  "intercites": 10,
+  "ouigo": 3,
+  "ter": 323,
+  "lyria": 3,
+  "transilien": 138,
+  "ret": 31,
+  "sup": 24,
+  "avgSteps": 12,
+  "avgSpeed": 69,
+  "minSpeed": 21,
+  "maxSpeed": 260,
+  "speedIntercites": 92,
+  "speedTransilien": 47,
+  "speedTer": 67,
+  "speedInoui": 151,
+  "speedTgv": 160,
+  "speedLyria": 88,
+  "speedOuigo": 77
+}
+> Process is finished!
